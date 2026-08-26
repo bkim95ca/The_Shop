@@ -30,8 +30,8 @@ router.post('/create-checkout-session', async (req, res) => {
     const session = await stripe.checkout.sessions.create({
         line_items,
         mode: 'payment',
-        success_url: 'http://localhost:3000/checkout/success',
-        cancel_url: 'http://localhost:3000/checkout',
+        success_url: `${process.env.CLIENT_URL || 'http://localhost:3000'}/#/checkout/success`,
+        cancel_url: `${process.env.CLIENT_URL || 'http://localhost:3000'}/#/checkout`,
     });
 
     res.send({ url: session.url });

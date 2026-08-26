@@ -14,6 +14,7 @@ function App() {
     <div className="App">
       <StateContext>
           <Routes>
+              <Route path='/' element={<Products/>}/>
               <Route path='/products' element={<Products/>}/>
               <Route path='/products/:cat' element={<Products/>}/>
               <Route path='/product/:id' element={<OneProduct/>}/>

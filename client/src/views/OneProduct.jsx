@@ -4,17 +4,19 @@ import { useStateContext } from '../context/StateContext';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+
 const OneProduct = (props) => {
     const { onAdd, onChangeSize } = useStateContext()
     const { id } = useParams();
     const [ product, setProduct ] = useState({});
 
     useEffect(() =>{
-        axios.get('http://localhost:8000/api/product/'+id)
+        axios.get(`${API_URL}/api/product/${id}`)
         .then((res)=>{
             setProduct(res.data)
         })
-    })
+    }, [id])
     const size = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 
     return (

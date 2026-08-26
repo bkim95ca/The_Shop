@@ -1,19 +1,28 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Navbar from '../components/Navbar'
+import { Link } from 'react-router-dom'
 import { useStateContext } from '../context/StateContext';
 import PayButton from '../components/PayButton';
 
 
 const Checkout = () => {
     const { cartItems, totalPrice, onRemove, onChangeQty, onChangeSize } = useStateContext();
+    const [email, setEmail] = useState('');
     const count = [1,2,3,4,5,6,7,8,9];
     const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
     return (
-        <div>
+        <div className='checkout-page'>
             <Navbar />
+            <header className='checkout-intro'>
+                <p className='catalog-kicker'>THE SHOP / YOUR ORDER</p>
+                <h1>Ready when you are.</h1>
+            </header>
             <div className='checkout-wrapper'>
                 <div className='checkout-cart'>
-                    <h4>SHOPPING BAG</h4>
+                    <div className='checkout-section-heading'>
+                        <h2>Shopping bag</h2>
+                        <span>{cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}</span>
+                    </div>
                     <div className='checkout-heading'>
                         <h5>ITEM</h5>
                         <h5>TOTAL</h5>
@@ -52,18 +61,29 @@ const Checkout = () => {
                             )
                         })
                     }
+                    {cartItems.length === 0 && <div className='checkout-empty'>
+                        <h3>Your bag is waiting.</h3>
+                        <p>Add something from the collection to continue.</p>
+                        <Link to='/products' className='checkout-link'>Browse products</Link>
+                    </div>}
                     <div className='checkout-bottom'>
                         <h5>Order Total</h5>
                         <h5>${totalPrice} USD</h5>
                     </div>
                 </div>
             <div className='checkout-right'>
-                <h4>CHECKOUT</h4>
+                <h2>Checkout</h2>
                 <div className='checkout-form'>
-                    <label >Email Address: </label>
-                        <input type="text" className='checkout-email' />
-                        <PayButton cartItems={cartItems}/>
-                        {/* <input onClick='' type="submit" value='PROCEED TO CHECKOUT' className='checkout-btn'/> */}
+                    <label htmlFor='checkout-email'>Email address</label>
+                    <input
+                        id='checkout-email'
+                        type='email'
+                        className='checkout-email'
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        placeholder='you@example.com'
+                    />
+                    <PayButton cartItems={cartItems} email={email}/>
                 </div>
             </div>
             </div>
