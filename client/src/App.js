@@ -7,6 +7,7 @@ import Checkout from './views/Checkout';
 import { StateContext } from './context/StateContext'
 import '@stripe/stripe-js'
 import CheckoutSucess from './views/CheckoutSuccess';
+import Landing from './views/Landing';
 
 
 function App() {
@@ -14,7 +15,7 @@ function App() {
     <div className="App">
       <StateContext>
           <Routes>
-              <Route path='/' element={<Products/>}/>
+              <Route path='/' element={<Landing/>}/>
               <Route path='/products' element={<Products/>}/>
               <Route path='/products/:cat' element={<Products/>}/>
               <Route path='/product/:id' element={<OneProduct/>}/>
