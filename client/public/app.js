@@ -24,25 +24,16 @@ function landing() {
 }
 function products(category) {
   app.innerHTML = `${nav()}<main class="catalog"><header class="catalog-header"><div><p class="kicker">THE SHOP / COLLECTION</p><h1>Everyday pieces, considered.</h1></div><p id="count" class="muted">Loading...</p></header><section id="products" class="product-grid"><p class="muted">Loading the collection...</p></section></main>`;
-  fetch(`${API_URL}${category ? `/api/products/${encodeURIComponent(category)}` : '/api/product'}`).then(response => { if (!response.ok) throw Error(); return response.json(); }).then(list => {
-    if (!list.length) list = category ? fallbackProducts.filter(item => item.categories === category) : fallbackProducts;
-    document.getElementById('count').textContent = `${list.length} ${list.length === 1 ? 'item' : 'items'}`;
-    document.getElementById('products').innerHTML = list.length ? list.map(product => `<article class="product-card"><a href="#/product/${product._id}"><div class="image-frame"><img src="${product.url[0]}" alt="${product.name}"></div><div class="product-info"><h3>${product.name}</h3><p>${money(product.price)}</p></div></a></article>`).join('') : '<div class="empty"><h2>No pieces found.</h2><p>Try another collection or check back soon.</p></div>';
-  }).catch(() => {
-    const list = category ? fallbackProducts.filter(item => item.categories === category) : fallbackProducts;
-    document.getElementById('count').textContent = `${list.length} ${list.length === 1 ? 'item' : 'items'}`;
-    document.getElementById('products').innerHTML = list.map(product => `<article class="product-card"><a href="#/product/${product._id}"><div class="image-frame"><img src="${product.url[0]}" alt="${product.name}"></div><div class="product-info"><h3>${product.name}</h3><p>${money(product.price)}</p></div></a></article>`).join('');
-  });
+  const list = category ? fallbackProducts.filter(item => item.categories === category) : fallbackProducts;
+  document.getElementById('count').textContent = `${list.length} ${list.length === 1 ? 'item' : 'items'}`;
+  document.getElementById('products').innerHTML = list.map(product => `<article class="product-card"><a href="#/product/${product._id}"><div class="image-frame"><img src="${product.url[0]}" alt="${product.name}"></div><div class="product-info"><h3>${product.name}</h3><p>${money(product.price)}</p></div></a></article>`).join('');
 }
 function product(id) {
   app.innerHTML = `${nav()}<main id="detail" class="detail"><p class="muted">Loading product...</p></main>`;
-  fetch(`${API_URL}/api/product/${encodeURIComponent(id)}`).then(response => { if (!response.ok) throw Error(); return response.json(); }).then(item => {
+  const item = fallbackProducts.find(productItem => productItem._id === id);
+  if (!item) { document.getElementById('detail').innerHTML = '<div class="empty"><h2>Product unavailable.</h2></div>'; return; }
+  Promise.resolve(item).then(item => {
     document.getElementById('detail').innerHTML = `<div class="detail-images">${item.url.map(url => `<img src="${url}" alt="${item.name}">`).join('')}</div><div class="detail-copy"><p class="kicker">THE SHOP / PIECE</p><h1>${item.name}</h1><p class="price">${money(item.price)}</p><p class="description">${item.desc.filter(Boolean).join('<br><br>')}</p><label>Size<select id="size">${sizes.map(size => `<option>${size}</option>`).join('')}</select></label><button id="add" class="button">ADD TO CART</button></div>`;
-    document.getElementById('add').onclick = () => { const existing = cart.find(entry => entry._id === item._id); if (existing) existing.quantity += 1; else cart.push({ ...item, size: document.getElementById('size').value, quantity: 1 }); save(); alert(`${item.name} added to your bag.`); };
-  }).catch(() => {
-    const item = fallbackProducts.find(productItem => productItem._id === id);
-    if (!item) { document.getElementById('detail').innerHTML = '<div class="empty"><h2>Product unavailable.</h2></div>'; return; }
-    document.getElementById('detail').innerHTML = `<div class="detail-images">${item.url.map(url => `<img src="${url}" alt="${item.name}">`).join('')}</div><div class="detail-copy"><p class="kicker">THE SHOP / PIECE</p><h1>${item.name}</h1><p class="price">${money(item.price)}</p><p class="description">${item.desc[0]}</p><label>Size<select id="size">${sizes.map(size => `<option>${size}</option>`).join('')}</select></label><button id="add" class="button">ADD TO CART</button></div>`;
     document.getElementById('add').onclick = () => { const existing = cart.find(entry => entry._id === item._id); if (existing) existing.quantity += 1; else cart.push({ ...item, size: document.getElementById('size').value, quantity: 1 }); save(); alert(`${item.name} added to your bag.`); };
   });
 }
