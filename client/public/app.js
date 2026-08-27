@@ -63,6 +63,10 @@ function checkout() {
     }
   };
 }
-function success() { app.innerHTML = `${nav()}<main class="success"><p class="kicker">THE SHOP / ORDER CONFIRMED</p><div class="success-mark">✓</div><h1>Thank you for your order.</h1><p class="status">Payment received</p><p>We appreciate your business. A confirmation will be sent to your email shortly.</p>${routeLink('/products', 'Continue shopping', 'button-link')}</main>`; }
+function success() {
+  cart.length = 0;
+  save();
+  app.innerHTML = `${nav()}<main class="success"><p class="kicker">THE SHOP / ORDER CONFIRMED</p><div class="success-mark" aria-hidden="true">✓</div><h1>Thank you for your order.</h1><p class="status">Payment received</p><p>We appreciate your business. Your order has been confirmed and a receipt will be sent to your email shortly.</p><div class="success-actions">${routeLink('/products', 'Continue shopping', 'button-link')}${routeLink('/checkout', 'View your bag', 'secondary-link')}</div></main>`;
+}
 function route() { const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean); if (!parts.length) return landing(); if (parts[0] === 'products') return products(parts[1]); if (parts[0] === 'product' && parts[1]) return product(parts[1]); if (parts[0] === 'checkout' && parts[1] === 'success') return success(); if (parts[0] === 'checkout') return checkout(); landing(); }
 window.addEventListener('hashchange', route); route();
