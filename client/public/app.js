@@ -1,4 +1,4 @@
-const API_URL = window.SHOP_API_URL || 'http://localhost:8000';
+const API_URL = (window.SHOP_API_URL || '').replace(/\/$/, '');
 const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const cart = JSON.parse(localStorage.getItem('the-shop-cart') || '[]');
 const app = document.getElementById('app');
@@ -38,11 +38,30 @@ function product(id) {
   });
 }
 function checkout() {
-  app.innerHTML = `${nav()}<main class="checkout"><header class="catalog-header"><div><p class="kicker">THE SHOP / YOUR ORDER</p><h1>Ready when you are.</h1></div></header><div class="checkout-layout"><section><div class="section-heading"><h2>Shopping bag</h2><span>${cart.length} ${cart.length === 1 ? 'item' : 'items'}</span></div><div class="cart-list">${cart.length ? cart.map(item => `<article class="cart-item"><img src="${item.url[0]}" alt="${item.name}"><div><h3>${item.name}</h3><label>Size <select data-size="${item._id}">${sizes.map(size => `<option ${size === item.size ? 'selected' : ''}>${size}</option>`).join('')}</select></label><label>Quantity <select data-quantity="${item._id}">${[1,2,3,4,5,6,7,8,9].map(num => `<option ${num === item.quantity ? 'selected' : ''}>${num}</option>`).join('')}</select></label><p>${money(item.price * item.quantity)}</p><button data-remove="${item._id}" class="text-button">Remove</button></div></article>`).join('') : `<div class="empty"><h2>Your bag is waiting.</h2><p>Add something from the collection to continue.</p>${routeLink('/products', 'Browse products', 'button-link')}</div>`}</div><div class="order-total"><strong>Order Total</strong><strong>${money(total())}</strong></div></section><aside><h2>Checkout</h2><label for="email">Email address</label><input id="email" type="email" placeholder="you@example.com"><button id="pay" class="button" ${cart.length ? '' : 'disabled'}>CHECK OUT</button></aside></div></main>`;
+  app.innerHTML = `${nav()}<main class="checkout"><header class="catalog-header"><div><p class="kicker">THE SHOP / YOUR ORDER</p><h1>Ready when you are.</h1></div></header><div class="checkout-layout"><section><div class="section-heading"><h2>Shopping bag</h2><span>${cart.length} ${cart.length === 1 ? 'item' : 'items'}</span></div><div class="cart-list">${cart.length ? cart.map(item => `<article class="cart-item"><img src="${item.url[0]}" alt="${item.name}"><div><h3>${item.name}</h3><label>Size <select data-size="${item._id}">${sizes.map(size => `<option ${size === item.size ? 'selected' : ''}>${size}</option>`).join('')}</select></label><label>Quantity <select data-quantity="${item._id}">${[1,2,3,4,5,6,7,8,9].map(num => `<option ${num === item.quantity ? 'selected' : ''}>${num}</option>`).join('')}</select></label><p>${money(item.price * item.quantity)}</p><button data-remove="${item._id}" class="text-button">Remove</button></div></article>`).join('') : `<div class="empty"><h2>Your bag is waiting.</h2><p>Add something from the collection to continue.</p>${routeLink('/products', 'Browse products', 'button-link')}</div>`}</div><div class="order-total"><strong>Order Total</strong><strong>${money(total())}</strong></div></section><aside><h2>Checkout</h2><label for="email">Email address</label><input id="email" type="email" placeholder="you@example.com"><button id="pay" class="button" ${cart.length ? '' : 'disabled'}>CHECK OUT</button><p id="checkout-message" class="checkout-message" role="alert"></p></aside></div></main>`;
   document.querySelectorAll('[data-remove]').forEach(button => button.onclick = () => { const index = cart.findIndex(item => item._id === button.dataset.remove); cart.splice(index, 1); save(); checkout(); });
   document.querySelectorAll('[data-size]').forEach(select => select.onchange = () => { cart.find(item => item._id === select.dataset.size).size = select.value; save(); });
   document.querySelectorAll('[data-quantity]').forEach(select => select.onchange = () => { cart.find(item => item._id === select.dataset.quantity).quantity = Number(select.value); save(); checkout(); });
-  document.getElementById('pay').onclick = () => fetch(`${API_URL}/api/stripe/create-checkout-session`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cartItems: cart, email: document.getElementById('email').value }) }).then(response => response.json()).then(data => { if (data.url) location.href = data.url; });
+  document.getElementById('pay').onclick = async () => {
+    const email = document.getElementById('email').value.trim();
+    const message = document.getElementById('checkout-message');
+    const button = document.getElementById('pay');
+    if (!email || !document.getElementById('email').checkValidity()) { message.textContent = 'Enter a valid email address to continue.'; return; }
+    if (!API_URL) { message.textContent = 'Checkout is not configured yet. Deploy the server and set REACT_APP_API_URL in GitHub Actions.'; return; }
+    button.disabled = true;
+    button.textContent = 'OPENING CHECKOUT...';
+    try {
+      const response = await fetch(`${API_URL}/api/stripe/create-checkout-session`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ cartItems: cart, email }) });
+      if (!response.ok) throw new Error('The checkout service returned an error.');
+      const data = await response.json();
+      if (!data.url) throw new Error('No checkout URL was returned.');
+      window.location.href = data.url;
+    } catch (error) {
+      message.textContent = `${error.message} Check that the deployed server is online and allows this Pages URL.`;
+      button.disabled = false;
+      button.textContent = 'CHECK OUT';
+    }
+  };
 }
 function success() { app.innerHTML = `${nav()}<main class="success"><p class="kicker">THE SHOP / ORDER CONFIRMED</p><div class="success-mark">✓</div><h1>Thank you for your order.</h1><p class="status">Payment received</p><p>We appreciate your business. A confirmation will be sent to your email shortly.</p>${routeLink('/products', 'Continue shopping', 'button-link')}</main>`; }
 function route() { const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean); if (!parts.length) return landing(); if (parts[0] === 'products') return products(parts[1]); if (parts[0] === 'product' && parts[1]) return product(parts[1]); if (parts[0] === 'checkout' && parts[1] === 'success') return success(); if (parts[0] === 'checkout') return checkout(); landing(); }

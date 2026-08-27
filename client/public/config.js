@@ -1,1 +1,1 @@
-window.SHOP_API_URL = '';
+window.SHOP_API_URL = 'http://localhost:8000';
