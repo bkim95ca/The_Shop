@@ -12,6 +12,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,6 +27,15 @@ jobs:
       - name: Install dependencies
         run: npm install
         working-directory: client
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Configure API URL
+        run: printf 'window.SHOP_API_URL = "%s";\n' "$REACT_APP_API_URL" > public/config.js
+        working-directory: client
+        env:
+          REACT_APP_API_URL: ${{ vars.REACT_APP_API_URL }}
 
       - name: Build client
         run: npm run build
@@ -38,3 +50,4 @@ jobs:
 
       - name: Deploy to Pages
         uses: actions/deploy-pages@v4
+        id: deployment
